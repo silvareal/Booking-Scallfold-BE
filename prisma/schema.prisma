@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  APPROVED
+  PENDING
+  REJECTED
+}
+
+enum SessionSlotStatus {
+  PENDING
+  COMPLETED
+}
+
+enum ScheduleRuleType {
+  DATE
+  WEEK_DAY
+}
+
+enum ScheduleRuleWeekDays {
+  monday
+  tuesday
+  wednesday
+  thursday
+  friday
+  saturday
+}
+
+// Sesssion Booking
+model Session {
+  id        Int           @id @default(autoincrement())
+  status    SessionStatus @default(PENDING)
+  timeZone  String
+  slots     SessionSlot[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+}
+
+model SessionSlot {
+  id        Int               @id @default(autoincrement())
+  time      DateTime
+  status    SessionSlotStatus @default(PENDING)
+  session   Session           @relation(fields: [sessionId], references: [id])
+  sessionId Int // relation scalar field  (used in the `@relation` attribute above)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+// Schedule
+model Schedule {
+  id        Int            @id @default(autoincrement())
+  name      String
+  rules     ScheduleRule[]
+  timeZone  String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model ScheduleRule {
+  id         Int                   @id @default(autoincrement())
+  type       ScheduleRuleType
+  weekDay    ScheduleRuleWeekDays?
+  day        String?
+  schedule   Schedule              @relation(fields: [scheduleId], references: [id])
+  scheduleId Int // relation scalar field  (used in the `@relation` attribute above)
+  intervals  Json?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+}
